@@ -1,100 +1,35 @@
-# Sistema de Controle de Acesso ESP32
+# 🔐 Sistema de Controle de Acesso ESP32
 
-Sistema completo de controle de acesso com teclado 4x3, ESP32-WROOM, backend Django e frontend Vue.js.
+Sistema completo de controle de acesso com ESP32, teclado matricial, backend Django e frontend Vue.js.
 
-## 🏗️ Arquitetura do Sistema
+## 🏗️ Arquitetura
+
+- **ESP32-WROOM**: Controla teclado matricial e relé
+- **Backend Django**: API REST para verificação de PINs
+- **Frontend Vue.js**: Interface web para gerenciamento
+- **Teclado 4x3**: Entrada de PINs de acesso
+
+## 📁 Estrutura do Projeto
 
 ```
-┌─────────────────┐    WiFi    ┌─────────────────┐    HTTP    ┌─────────────────┐
-│   ESP32-WROOM   │ ────────── │  Backend Django │ ────────── │  Frontend Vue   │
-│                 │             │                 │             │                 │
-│ • Teclado 4x3   │             │ • API REST      │             │ • Interface Web │
-│ • LED + Buzzer  │             │ • Banco SQLite  │             │ • Gestão Users  │
-│ • Relé Fechadura│             │ • Logs Acesso   │             │ • Logs + Config │
-└─────────────────┘             └─────────────────┘             └─────────────────┘
-```
-
-## 📋 Componentes
-
-### Hardware
-- **ESP32-WROOM** - Microcontrolador principal
-- **Teclado 4x3** - Entrada de PINs
-- **LED** - Feedback visual
-- **Buzzer** - Feedback sonoro
-- **Relé** - Controle da fechadura magnética
-
-### Software
-- **Backend Django** - API REST, banco de dados, logs
-- **Frontend Vue.js** - Interface web para administração
-- **Firmware ESP32** - Controle do hardware
-
-## 🔧 Configuração
-
-### 1. Backend Django
-
-```bash
-# Instalar dependências
-cd backend
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# ou
-venv\Scripts\activate     # Windows
-
-pip install -r requirements.txt
-
-# Configurar banco
-python manage.py migrate
-
-# Criar superusuário (opcional)
-python manage.py createsuperuser
-
-# Rodar servidor
-python manage.py runserver 0.0.0.0:8000
-```
-
-### 2. Frontend Vue.js
-
-```bash
-# Instalar dependências
-cd frontend
-npm install
-
-# Rodar servidor de desenvolvimento
-npm run dev
-```
-
-### 3. Firmware ESP32
-
-#### Configuração do Arduino IDE
-1. Instalar ESP32 board package
-2. Selecionar board: "ESP32 Dev Module"
-3. Configurar porta serial
-
-#### Bibliotecas Necessárias
-- `WiFi` (incluída)
-- `HTTPClient` (incluída)
-- `ArduinoJson` (instalar via Library Manager)
-- `Keypad` (instalar via Library Manager)
-
-#### Configuração do Sistema
-Editar `firmware/config.h`:
-
-```cpp
-// WiFi
-#define WIFI_SSID "SUA_REDE_WIFI"
-#define WIFI_PASSWORD "SUA_SENHA_WIFI"
-
-// Backend
-#define SERVER_URL "http://192.168.1.100:8000"  // IP do seu backend
-
-// Pinos do teclado (confirmados funcionando)
-#define ROW_PINS {25, 26, 27, 14}  // Linhas
-#define COL_PINS {12, 13, 15}       // Colunas
+teclado-esp/
+├── backend/                 # Django API
+│   ├── api/                # App principal
+│   ├── core/               # Configurações
+│   └── requirements.txt    # Dependências Python
+├── frontend/               # Vue.js Interface
+│   ├── src/               # Código fonte
+│   └── package.json       # Dependências Node
+├── firmware/              # Código ESP32
+│   ├── sistema_final_integrado_novo_ip.ino
+│   └── config.h           # Configurações
+├── docs/                  # Documentação
+└── scripts/               # Scripts de deploy
 ```
 
 ## 🔌 Conexões do Hardware
 
-### Teclado 4x3 → ESP32
+### Teclado 4x3 → ESP32-WROOM
 ```
 Teclado Pino 1 → ESP32 Pino 25 (Linha 1)
 Teclado Pino 2 → ESP32 Pino 26 (Linha 2)
@@ -107,35 +42,67 @@ Teclado Pino 7 → ESP32 Pino 15 (Coluna 3)
 
 ### Outros Componentes
 ```
-LED → ESP32 Pino 2
-Buzzer → ESP32 Pino 21
-Relé → ESP32 Pino 22
+LED Verde → ESP32 Pino 33
+LED Vermelho → ESP32 Pino 21
+Buzzer → ESP32 Pino 22
+Relé → ESP32 Pino 32
 ```
 
-## 🚀 Como Usar
+## 🚀 Instalação e Configuração
 
-### 1. Inicialização
-1. Conectar hardware conforme diagrama
-2. Configurar WiFi no `config.h`
-3. Fazer upload do firmware `sistema_final.ino`
-4. Rodar backend Django
-5. Rodar frontend Vue.js
+### 1. Backend Django
 
-### 2. Teste do Sistema
-1. **Digite um PIN** no teclado (ex: 1234)
-2. **Pressione *** para confirmar
-3. **Aguarde resposta** do backend
-4. **Veja feedback** no LED e buzzer
-5. **Acesse liberado** se PIN correto
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# ou venv\Scripts\activate  # Windows
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver 0.0.0.0:8191
+```
 
-### 3. PINs Padrão
-- **Admin**: 8729 (configurável no frontend)
-- **Usuários**: Criados via interface web
+### 2. Frontend Vue.js
 
-## 📊 Funcionalidades
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### 3. Firmware ESP32
+
+1. Abra o Arduino IDE
+2. Instale as bibliotecas:
+   - `WiFi` (incluída)
+   - `HTTPClient` (incluída)
+   - `ArduinoJson` (via Library Manager)
+3. Configure o ESP32 como placa
+4. Edite `firmware/config.h` com suas configurações WiFi
+5. Faça upload do `firmware/sistema_final_integrado_novo_ip.ino`
+
+## ⚙️ Configurações
+
+### WiFi (firmware/config.h)
+```cpp
+#define WIFI_SSID "SUA_REDE_WIFI"
+#define WIFI_PASSWORD "SUA_SENHA_WIFI"
+```
+
+### Backend (firmware/config.h)
+```cpp
+#define SERVER_URL "http://10.102.0.108:8191"
+```
+
+### Frontend (frontend/src/App.vue)
+```javascript
+const API_BASE_URL = 'http://10.102.0.108:8191/api'
+```
+
+## 🎯 Funcionalidades
 
 ### ESP32
-- ✅ Detecção de teclas
+- ✅ Detecção de teclas matriciais
 - ✅ Entrada de PIN (4 dígitos)
 - ✅ Conexão WiFi
 - ✅ Comunicação com backend
@@ -149,7 +116,7 @@ Relé → ESP32 Pino 22
 - ✅ Logs de acesso
 - ✅ Gestão de usuários
 - ✅ Configurações do sistema
-- ✅ PIN admin configurável
+- ✅ PIN admin configurável (8729)
 
 ### Frontend Vue.js
 - ✅ Interface web responsiva
@@ -161,10 +128,9 @@ Relé → ESP32 Pino 22
 
 ## 🔍 Debug e Troubleshooting
 
-### Serial Monitor
-O ESP32 envia informações detalhadas via Serial:
+### Serial Monitor ESP32
 ```
-=== SISTEMA DE CONTROLE DE ACESSO FINAL ===
+=== SISTEMA DE CONTROLE DE ACESSO ===
 📡 Conectando ao WiFi: SUA_REDE_WIFI
 ✅ WiFi conectado! IP: 192.168.1.101
 🔘 TECLA: '1'
@@ -174,11 +140,18 @@ O ESP32 envia informações detalhadas via Serial:
 🎉 ACESSO LIBERADO!
 ```
 
+### Teste da API
+```bash
+curl -X POST http://10.102.0.108:8191/api/access/verify/ \
+  -H "Content-Type: application/json" \
+  -d '{"pin":"8729"}'
+```
+
 ### Problemas Comuns
 
 #### Teclado não funciona
 - Verificar conexões dos pinos
-- Confirmar mapeamento no `config.h`
+- Confirmar mapeamento no firmware
 - Testar com código simples primeiro
 
 #### WiFi não conecta
@@ -188,41 +161,34 @@ O ESP32 envia informações detalhadas via Serial:
 
 #### Backend não responde
 - Verificar se Django está rodando
-- Confirmar IP no `config.h`
-- Testar endpoint via curl:
-```bash
-curl -X POST http://localhost:8000/api/access/verify/ \
-  -H "Content-Type: application/json" \
-  -d '{"pin":"8729"}'
-```
+- Confirmar IP no firmware
+- Testar endpoint via curl
 
-## 📁 Estrutura do Projeto
+## 📊 PINs Padrão
 
-```
-teclado-esp/
-├── backend/                 # Django API
-│   ├── api/                # App principal
-│   ├── core/               # Configurações
-│   ├── manage.py           # Script Django
-│   └── requirements.txt    # Dependências Python
-├── frontend/               # Vue.js Interface
-│   ├── src/               # Código fonte
-│   ├── package.json       # Dependências Node
-│   └── vite.config.js     # Config Vite
-└── firmware/              # Código ESP32
-    ├── sistema_final.ino  # Código principal
-    ├── config.h           # Configurações
-    └── *.ino             # Códigos de teste
-```
+- **Admin**: 8729 (configurável no frontend)
+- **Usuários**: Criados via interface web
+
+## 🛠️ Scripts Úteis
+
+- `deploy_backend.sh`: Deploy do backend para servidor
+- `deploy_frontend.sh`: Deploy do frontend para servidor
+- `test_teclado.py`: Teste da API
+- `monitor_esp32.sh`: Monitoramento do ESP32
+
+## 📚 Documentação
+
+- `docs/hardware.md`: Esquemas de conexão
+- `docs/verificacao_teclado.md`: Troubleshooting do teclado
+- `docs/teste_teclado.md`: Guia de testes
 
 ## 🎯 Próximos Passos
 
-1. **Testar sistema completo** com hardware real
-2. **Configurar rede WiFi** correta
-3. **Ajustar IP do backend** no `config.h`
-4. **Testar PIN admin** (8729)
-5. **Criar usuários** via frontend
-6. **Verificar logs** de acesso
+1. **Configurar rede WiFi** no firmware
+2. **Ajustar IP do backend** no firmware
+3. **Testar PIN admin** (8729)
+4. **Criar usuários** via frontend
+5. **Verificar logs** de acesso
 
 ## 📞 Suporte
 
@@ -234,4 +200,4 @@ Para dúvidas ou problemas:
 
 ---
 
-**Sistema desenvolvido com ESP32-WROOM, Django, Vue.js e teclado 4x3** 
+**🎉 Sistema desenvolvido com ESP32-WROOM, Django, Vue.js e teclado 4x3** 
