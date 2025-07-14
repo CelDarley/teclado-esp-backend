@@ -1,9 +1,27 @@
 from django.db import models
 from django.core.validators import MinLengthValidator, RegexValidator
 
+class Device(models.Model):
+    """Modelo de dispositivo"""
+    name = models.CharField(max_length=100, unique=True, help_text='Nome do dispositivo')
+    ip_address = models.GenericIPAddressField(unique=True, help_text='Endereço IP do dispositivo')
+    description = models.TextField(blank=True, null=True, help_text='Descrição do dispositivo')
+    is_active = models.BooleanField(default=True, help_text='Dispositivo ativo')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Dispositivo'
+        verbose_name_plural = 'Dispositivos'
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} ({self.ip_address})"
+
 class User(models.Model):
     """Modelo de usuário customizado"""
-    username = models.CharField(max_length=150, unique=True)
+    device = models.ForeignKey(Device, on_delete=models.CASCADE, related_name='users', help_text='Dispositivo ao qual o usuário pertence', null=True, blank=True)
+    username = models.CharField(max_length=150)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
     pin = models.CharField(
@@ -22,12 +40,14 @@ class User(models.Model):
     class Meta:
         verbose_name = 'Usuário'
         verbose_name_plural = 'Usuários'
+        unique_together = ['device', 'username']  # Username único por dispositivo
 
     def __str__(self):
-        return f"{self.username} - PIN: {self.pin}"
+        return f"{self.username} - {self.device.name if self.device else 'Sem dispositivo'} - PIN: {self.pin}"
 
 class AccessLog(models.Model):
     """Histórico de acessos"""
+    device = models.ForeignKey(Device, on_delete=models.CASCADE, related_name='access_logs', help_text='Dispositivo onde ocorreu o acesso', null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='access_logs', null=True, blank=True)
     access_time = models.DateTimeField(auto_now_add=True)
     success = models.BooleanField(default=False)
@@ -40,10 +60,12 @@ class AccessLog(models.Model):
 
     def __str__(self):
         status = "✅ Acesso" if self.success else "❌ Negado"
-        return f"{self.user.username if self.user else 'Desconhecido'} - {self.access_time.strftime('%d/%m/%Y %H:%M')} - {status}"
+        device_name = self.device.name if self.device else 'Dispositivo Desconhecido'
+        return f"{device_name} - {self.user.username if self.user else 'Desconhecido'} - {self.access_time.strftime('%d/%m/%Y %H:%M')} - {status}"
 
 class SystemConfig(models.Model):
     """Configurações do sistema"""
+    device = models.ForeignKey(Device, on_delete=models.CASCADE, related_name='configs', help_text='Dispositivo da configuração', null=True, blank=True)
     admin_pin = models.CharField(
         max_length=4,
         default='8729',
@@ -64,6 +86,8 @@ class SystemConfig(models.Model):
     class Meta:
         verbose_name = 'Configuração do Sistema'
         verbose_name_plural = 'Configurações do Sistema'
+        unique_together = ['device']  # Uma configuração por dispositivo
 
     def __str__(self):
-        return f"Configuração do Sistema - Admin PIN: {self.admin_pin}"
+        device_name = self.device.name if self.device else 'Dispositivo Desconhecido'
+        return f"Configuração do {device_name} - Admin PIN: {self.admin_pin}"
