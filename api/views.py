@@ -6,6 +6,7 @@ from django.contrib.auth import authenticate
 from .models import User, AccessLog, Device, SystemConfig
 from .serializers import UserSerializer, AccessLogSerializer, DeviceSerializer, SystemConfigSerializer
 import json
+from django.utils import timezone
 
 @api_view(['GET'])
 def status_view(request):
@@ -347,4 +348,46 @@ def logs_view(request):
         return Response({
             'success': False,
             'message': f'Erro ao listar logs: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@api_view(['POST'])
+def trigger_device_view(request, device_id):
+    """Acionar dispositivo (simular acesso com PIN correto)"""
+    try:
+        # Verificar se o dispositivo existe
+        device = Device.objects.get(id=device_id)  # type: ignore
+        if not device.is_active:
+            return Response({
+                'success': False,
+                'message': 'Dispositivo inativo'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Obter IP do cliente (ou usar um IP padrão para simulação)
+        client_ip = request.META.get('REMOTE_ADDR', '127.0.0.1')
+        
+        # Registrar log de acesso simulado (como se fosse admin)
+        AccessLog.objects.create(  # type: ignore
+            device=device,
+            user=None,
+            success=True,
+            ip_address=client_ip,
+            access_time=timezone.now()
+        )
+        
+        return Response({
+            'success': True,
+            'message': f'Dispositivo {device.name} acionado com sucesso',
+            'device_name': device.name,
+            'access_granted': True
+        }, status=status.HTTP_200_OK)
+        
+    except Device.DoesNotExist:  # type: ignore
+        return Response({
+            'success': False,
+            'message': 'Dispositivo não encontrado'
+        }, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({
+            'success': False,
+            'message': f'Erro ao acionar dispositivo: {str(e)}'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

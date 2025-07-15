@@ -12,6 +12,7 @@ urlpatterns = [
     path('devices/create/', views.create_device_view, name='create_device'),
     path('devices/<int:device_id>/delete/', views.delete_device_view, name='delete_device'),
     path('devices/<int:device_id>/update-ip/', views.update_device_ip_view, name='update_device_ip'),
+    path('trigger-device/<int:device_id>/', views.trigger_device_view, name='trigger_device'),
     
     # User routes (now device-specific)
     path('users/', views.users_view, name='users'),
